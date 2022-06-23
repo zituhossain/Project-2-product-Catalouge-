@@ -2,21 +2,27 @@ const formElm = document.querySelector('form');
 const nameInputElm = document.querySelector('.product-name');
 const priceInputElm = document.querySelector('.product-price');
 const listGroupElm = document.querySelector('.list-group');
+const filterElm = document.querySelector('#filter');
 
+// tracking item
 let products = [];
 
-formElm.addEventListener('submit', (evt) => {
-    // prevent defaults
-    evt.preventDefault();
-    // Recieving Inputs
-    const {nameInput, priceInput} =  receiveInputs();
-    // Validate Inputs
-    const error = validateInput(nameInput, priceInput);
-    if(error) {
-        alert('Please Provide Valid Input');
-        resetInput();
-        return;
-    }
+function init() {
+    formElm.addEventListener('submit', (evt) => {
+        // prevent defaults
+        evt.preventDefault();
+        // Recieving Inputs
+        const {
+            nameInput,
+            priceInput
+        } = receiveInputs();
+        // Validate Inputs
+        const error = validateInput(nameInput, priceInput);
+        if (error) {
+            alert('Please Provide Valid Input');
+            resetInput();
+            return;
+        }
         // add item to datasource
         // generate item
         const id = products.length;
@@ -26,23 +32,46 @@ formElm.addEventListener('submit', (evt) => {
             price: Number(priceInput)
         });
         // add item to UI
-        addItemToUi(id,nameInput,priceInput);
+        addItemToUi(id, nameInput, priceInput);
         // reset input
         resetInput();
-    
-});
 
-// deleting item
-listGroupElm.addEventListener('click', (evt) => {
-    if(evt.target.classList.contains('delete-item')) {
-        const id = getItemId(evt.target);
-        // delete item from ui
-        removeItemfromUi(id);
-        removeItemfromDataStore(id);
-        
-    }
-    
-});
+    });
+
+    // filter item
+    filterElm.addEventListener('keyup', (evt) => {
+        const filterValue = evt.target.value;
+        const filteredArr = products.filter((product) => product.name.includes(filterValue));
+        // show filtered item to UI
+        showAllItemToUI(filteredArr);
+    });
+
+    // deleting item
+    listGroupElm.addEventListener('click', (evt) => {
+        if (evt.target.classList.contains('delete-item')) {
+            const id = getItemId(evt.target);
+            // delete item from ui
+            removeItemfromUi(id);
+            removeItemfromDataStore(id);
+
+        }
+
+    });
+
+}
+
+init();
+
+
+function showAllItemToUI(items) {
+    listGroupElm.innerHTML = '';
+    items.forEach((item) => {
+        const listElm = `<li class="list-group-item item-${item.id} collection-item">
+    <strong>${item.name}</strong>- <span class="price">${item.price}</span>
+    <i class="fa fa-trash delete-item float-right"></i></li>`;
+        listGroupElm.insertAdjacentHTML('afterbegin', listElm);
+    })
+}
 
 function removeItemfromUi(id) {
     document.querySelector(`.item-${id}`).remove();
@@ -72,10 +101,10 @@ function addItemToUi(id, name, price) {
 
 function validateInput(name, price) {
     let isError = false;
-    if(!name || name.length < 4) {
+    if (!name || name.length < 4) {
         isError = true;
     }
-    if(!price || Number(price) <= 0) {
+    if (!price || Number(price) <= 0) {
         isError = true;
     }
     return isError;
