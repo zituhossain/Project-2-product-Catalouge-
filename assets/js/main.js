@@ -66,7 +66,23 @@ function receiveInputs() {
     }
 }
 
+function addItemToStorage(product) {
+    let products;
+    if(localStorage.getItem('storeProducts')) {
+        products = JSON.parse(localStorage.getItem('storeProducts'));
+        products.push(product);
+        // update to localstorage
+        localStorage.setItem('storeProducts', JSON.stringify(products));
+    }else {
+        products = [];
+        products.push(product);
+        // update to local storage
+        localStorage.setItem('storeProducts', JSON.stringify(products));
+    }
+}
+
 function init() {
+
     formElm.addEventListener('submit', (evt) => {
         // prevent defaults
         evt.preventDefault();
@@ -79,38 +95,46 @@ function init() {
             resetInput();
             return;
         }
-            // add item to datasource
+        
             // generate item
             const id = products.length;
-            products.push({
+            const product = {
                 id: id,
                 name: nameInput,
                 price: Number(priceInput)
-            });
+            }
+
+            // add item to data store
+            products.push(product);
+
             // add item to UI
             addItemToUi(id,nameInput,priceInput);
+
+            // add item to local storage
+            addItemToStorage(product);
+
             // reset input
             resetInput();
         
     });
 
     // filter item
-filterElm.addEventListener('keyup', (evt) => {
-    const filterValue = evt.target.value;
-    const filteredArr = products.filter((product) => product.name.includes(filterValue));
-    // show filtered item to UI
-    showAllItemToUI(filteredArr);
-});
+    filterElm.addEventListener('keyup', (evt) => {
+        const filterValue = evt.target.value;
+        const filteredArr = products.filter((product) => product.name.includes(filterValue));
+        // show filtered item to UI
+        showAllItemToUI(filteredArr);
+    });
 
-// deleting item
-listGroupElm.addEventListener('click', (evt) => {
-    if(evt.target.classList.contains('delete-item')) {
-        const id = getItemId(evt.target);
-        // delete item from ui
-        removeItemfromUi(id);
-        removeItemfromDataStore(id); 
-    }
-});
+    // deleting item
+    listGroupElm.addEventListener('click', (evt) => {
+        if(evt.target.classList.contains('delete-item')) {
+            const id = getItemId(evt.target);
+            // delete item from ui
+            removeItemfromUi(id);
+            removeItemfromDataStore(id); 
+        }
+    });
 
 }
 
