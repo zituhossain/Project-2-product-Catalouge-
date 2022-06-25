@@ -10,7 +10,7 @@ const filterElm = document.querySelector('#filter');
 let products = [];
 
 
-function showAllItemToUI(items) {
+function showAllItemsToUI(items) {
     listGroupElm.innerHTML = '';
     items.forEach((item) => {
         const listElm = `<li class="list-group-item item-${item.id} collection-item">
@@ -24,8 +24,12 @@ function removeItemfromUi(id) {
     document.querySelector(`.item-${id}`).remove();
 }
 
+function updateAfterRemove(products, id) {
+    return products.filter(product => product.id !== id);
+}
+
 function removeItemfromDataStore(id) {
-    const productAfterDelete = products.filter(product => product.id !== id);
+    const productAfterDelete = updateAfterRemove(products, id);
     products = productAfterDelete;
 }
 
@@ -51,9 +55,10 @@ function validateInput(name, price) {
     if(!name || name.length < 4) {
         isError = true;
     }
-    if(!price || Number(price) <= 0) {
+    if(!price || isNaN(price) || Number(price) <= 0) {
         isError = true;
     }
+  
     return isError;
 }
 
@@ -79,6 +84,15 @@ function addItemToStorage(product) {
         // update to local storage
         localStorage.setItem('storeProducts', JSON.stringify(products));
     }
+}
+
+function removeProductFromStorage(id) {
+    // pick from local storage
+    const products = JSON.parse(localStorage.getItem('storeProducts'));
+    // filter
+    const productsAfterRemove = updateAfterRemove(products, id);
+    // save data to local storage
+    localStorage.setItem('storeProducts', JSON.stringify(productsAfterRemove));
 }
 
 function init() {
@@ -123,7 +137,7 @@ function init() {
         const filterValue = evt.target.value;
         const filteredArr = products.filter((product) => product.name.includes(filterValue));
         // show filtered item to UI
-        showAllItemToUI(filteredArr);
+        showAllItemsToUI(filteredArr);
     });
 
     // deleting item
@@ -132,7 +146,18 @@ function init() {
             const id = getItemId(evt.target);
             // delete item from ui
             removeItemfromUi(id);
+            // delete item from data store
             removeItemfromDataStore(id); 
+            // delete item from storage
+            removeProductFromStorage(id);
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', (e) => {
+        // checking item into local storage
+        if(localStorage.getItem('storeProducts')) {
+            const products = JSON.parse(localStorage.getItem('storeProducts'));
+            showAllItemsToUI(products);
         }
     });
 
