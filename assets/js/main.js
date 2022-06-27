@@ -5,6 +5,7 @@ const nameInputElm = document.querySelector('.product-name');
 const priceInputElm = document.querySelector('.product-price');
 const listGroupElm = document.querySelector('.list-group');
 const filterElm = document.querySelector('#filter');
+const addProductElm = document.querySelector('.add-product');
 
 // tracking item
 let products = [];
@@ -15,6 +16,7 @@ function showAllItemsToUI(items) {
     items.forEach((item) => {
         const listElm = `<li class="list-group-item item-${item.id} collection-item">
     <strong>${item.name}</strong>- <span class="price">${item.price}</span>
+    <i class="fa fa-pencil-alt edit-item float-right"></i>
     <i class="fa fa-trash delete-item float-right"></i></li>`;
     listGroupElm.insertAdjacentHTML('afterbegin', listElm);
     })
@@ -46,6 +48,7 @@ function resetInput() {
 function addItemToUi(id, name, price) {
     const listElm = `<li class="list-group-item item-${id} collection-item">
     <strong>${name}</strong>- <span class="price">${price}</span>
+    <i class="fa fa-pencil-alt edit-item float-right">
     <i class="fa fa-trash delete-item float-right"></i></li>`;
     listGroupElm.insertAdjacentHTML('afterbegin', listElm);
 }
@@ -95,7 +98,20 @@ function removeProductFromStorage(id) {
     localStorage.setItem('storeProducts', JSON.stringify(productsAfterRemove));
 }
 
+function populateUIInEditState(product) {
+    nameInputElm.value = product.name;
+    priceInputElm.value = product.price;
+}
+
+function showUpdateBtn() {
+    const elm = `<button type='button' class="btn mt-3 btn-block btn-secondary update-product">Update</button>`;
+    // hide the submit button
+    addProductElm.style.display = 'none';
+    formElm.insertAdjacentHTML('beforeend', elm);
+}
+
 function init() {
+    let updatedItemId;
 
     formElm.addEventListener('submit', (evt) => {
         // prevent defaults
@@ -140,7 +156,7 @@ function init() {
         showAllItemsToUI(filteredArr);
     });
 
-    // deleting item
+    // deleting item (event delegation)
     listGroupElm.addEventListener('click', (evt) => {
         if(evt.target.classList.contains('delete-item')) {
             const id = getItemId(evt.target);
@@ -150,13 +166,56 @@ function init() {
             removeItemfromDataStore(id); 
             // delete item from storage
             removeProductFromStorage(id);
+        }else if(evt.target.classList.contains('edit-item')) {
+            // pick the item id
+            updatedItemId = getItemId(evt.target);
+
+            // find the item
+            const foundProduct = products.find(product => product.id === updatedItemId);
+           
+            // populate item data to UI
+            populateUIInEditState(foundProduct);
+
+            // show updated button
+            showUpdateBtn();
+            
+        }
+    });
+
+    formElm.addEventListener('click', (evt) => {
+        if(evt.target.classList.contains('update-product')) {
+            // pick the data from field
+           const {name, price} = receiveInputs();
+            // validate the item
+            const isError = validateInput(name, price);   
+            if(isError) {
+                alert('Please Provide Valid Input');
+                return;
+            }
+            // Updated data should be updated to data store
+           const updatedProductsArr = products.map(product => {
+                if(product.id === updatedItemId) {
+                    // item should be updated
+                    return {
+                        id: product.id,
+                        name,
+                        price,
+                    }
+                }else {
+                    // no update
+                    return product;
+                }
+            });
+            console.log(updatedProductsArr);
+            // Updated data should be updated to UI
+            // Updated data should be updated to local storage
         }
     });
 
     document.addEventListener('DOMContentLoaded', (e) => {
         // checking item into local storage
         if(localStorage.getItem('storeProducts')) {
-            const products = JSON.parse(localStorage.getItem('storeProducts'));
+            products = JSON.parse(localStorage.getItem('storeProducts'));
             showAllItemsToUI(products);
         }
     });
